@@ -145,12 +145,12 @@ define([],function(){
         key = obj[keys[x]];
         if(key.constructor.toString() === Object.toString() || key.constructor.toString() === Array.toString())
         {
-
+          //object.defineProp
           KB_Model.deepInject(key,obj2[keys[x]]);
         }
         else
         {
-
+          //object.defineProp
         }
       }
       return obj2;
