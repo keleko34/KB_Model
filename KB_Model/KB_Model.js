@@ -1,11 +1,11 @@
 define([],function(){
   function CreateKB_Model(){
 
-    var _model = {}
-      , _viewmodels = {}
-      , _dataListeners = {}
-      , _dataUpdateListeners = {}
-      , _changeEvent = function(vm,obj,value,oldValue,scopeString,key,args,action)
+    var _model = {},
+        _viewmodels = {},
+        _dataListeners = {},
+        _dataUpdateListeners = {},
+        _changeEvent = function(vm,obj,value,oldValue,scopeString,key,args,action)
         {
           this.stopPropagation = function(){this._stopPropogation = true;};
           this.preventDefault = function(){this._preventDefault = true;};
@@ -17,11 +17,11 @@ define([],function(){
           this.key = key;
           this.args = args;
           this.action = action;
-        }
-      , _onSet = function(vm,obj,value,oldValue,scopeString,key)
+        },
+        _onSet = function(vm,obj,value,oldValue,scopeString,key)
         {
-          var e = new _changeEvent(vm,obj,value,oldValue,scopeString,key)
-            , x;
+          var e = new _changeEvent(vm,obj,value,oldValue,scopeString,key),
+              x = 0;
           if(_dataListeners[key] !== undefined)
           {
             loop:for(x=0;x<_dataListeners[key].length;x++)
@@ -43,11 +43,11 @@ define([],function(){
             return false;
           }
           return true;
-        }
-      , _onUpdate = function(vm,obj,value,oldValue,scopeString,key,args,action)
+        },
+        _onUpdate = function(vm,obj,value,oldValue,scopeString,key,args,action)
         {
-          var e = new _changeEvent(vm,obj,value,oldValue,scopeString,key,args,action);
-          , x;
+          var e = new _changeEvent(vm,obj,value,oldValue,scopeString,key,args,action),
+              x = 0;
           if(_dataUpdateListeners[key] !== undefined)
           {
             loop:for(x=0;x<_dataUpdateListeners[key].length;x++)
@@ -69,16 +69,16 @@ define([],function(){
             return false;
           }
           return true;
-        }
-      , _saveEnum = ['local','session']
+        },
+        _saveEnum = ['local','session']
 
     function KB_Model()
     {
 
       //look at local storage and load, if viewmodel has save, save default to local storage, set also updates local storage
-      var keys = Object.keys(_viewmodels)
-        , x
-        , key = {};
+      var keys = Object.keys(_viewmodels),
+          x = 0,
+          key = {};
 
       for(x=0;x<keys.length;x++)
       {
@@ -116,10 +116,10 @@ define([],function(){
 
     KB_Model.deepCopy = function(obj,obj2)
     {
-      var keys = Object.keys(obj)
-        , key
-        , x
-        , obj2 = (obj2 === undefined ? {} : obj2);
+      var keys = Object.keys(obj),
+          key = "",
+          x = 0,
+          obj2 = (obj2 === undefined ? {} : obj2);
 
       for(x=0;x<keys.length;x++)
       {
@@ -147,11 +147,11 @@ define([],function(){
       str = (str === undefined ? "" : str);
       name = (name === undefined ? "unknown" : name);
 
-      var keys = Object.keys(obj)
-        , key
-        , x
-        , obj2 = (obj2 === undefined ? {} : obj2)
-        , _inject = function(key,value)
+      var keys = Object.keys(obj),
+          key,
+          x,
+          obj2 = (obj2 === undefined ? {} : obj2),
+          _inject = function(key,value)
           {
             if(str.lastIndexOf("[") === (str.length-1))
             {
@@ -223,8 +223,8 @@ define([],function(){
 
     KB_Model.removeDataListener = function(attr,func)
     {
-      var x
-        , d = dataListeners[attr];
+      var x = 0,
+          d = dataListeners[attr];
       if(d !== undefined)
       {
         loop:for(x=0;x<d.length;x++)
@@ -251,8 +251,8 @@ define([],function(){
 
     KB_Model.removeDataUpdateListener = function(attr,func)
     {
-      var x
-        , d = _dataUpdateListeners[attr];
+      var x = 0,
+          d = _dataUpdateListeners[attr];
       if(d !== undefined)
       {
         loop:for(x=0;x<d.length;x++)
