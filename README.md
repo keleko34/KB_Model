@@ -10,7 +10,7 @@ This library allows for Creating ViewModels and listening for data changes in th
 `npm install KB_Model`
 
 ###### Start
-*note: You must call constructor everytime you add a viewmodel
+*note: You must call constructor everytime you add a viewmodel*
 
     /* Creates new KB, same as 'new method();' */
     var kbModel = CreateKB_Model();
@@ -31,7 +31,7 @@ This library allows for Creating ViewModels and listening for data changes in th
     kbModel.call();
 
 ###### Use With *Storage*
-*note: Storage type data automatically remembers changes after page refresh or in the case of 'local' after browser restart
+*note: Storage type data automatically remembers changes after page refresh or in the case of 'local' after browser restart*
 
     var kbModel = CreateKB_Model();
     
@@ -42,7 +42,7 @@ This library allows for Creating ViewModels and listening for data changes in th
     
     kbModel.call();
     
-###### *Listener* Examples
+###### Examples Of *Listeners*
 
     var kbModel = CreateKB();
     
@@ -65,8 +65,8 @@ This library allows for Creating ViewModels and listening for data changes in th
     kbModel.call();
 
 
-###### Accessing and Changing *data*
-note* Original Data is naver changed and multiple viewmodels can be made from it that are completely seperate
+###### Accessing and Changing *Data*
+*note: Original Data is naver changed and multiple viewmodels can be made from it that are completely seperate*
 
     var kbModel = CreateKB();
     
