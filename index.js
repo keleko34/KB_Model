@@ -1,1 +1,1 @@
-module.exports = require( './KB/Min/KB.min' );
+module.exports = require( './KB_Model/Min/KB_Model.min' );
