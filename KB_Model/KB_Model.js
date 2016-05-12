@@ -64,13 +64,28 @@ define([],function(){
               if(e._stopPropogation) break loop;
             }
           }
+
+          //storage
+          var lStorage = _storage('local').getItem("KB_Model_"+vm),
+          sStorage = _storage('session').getItem("KB_Model_"+vm);
+
+          if(lStorage)
+          {
+            _storage('local').setItem("KB_Model_"+vm,JSON.stringify(_viewmodels[vm]._getData));
+          }
+          else if(sStorage)
+          {
+            _storage('session').setItem("KB_Model_"+vm,JSON.stringify(_viewmodels[vm]._getData));
+          }
+
           if(e._preventDefault)
           {
             return false;
           }
           return true;
         },
-        _saveEnum = ['local','session']
+        _saveEnum = ['local','session'],
+        _storage = function(type){if(_saveEnum.indexOf(type) > -1){return (type === 'local' ? localStorage : sessionStorage)}}
 
     function KB_Model()
     {
@@ -78,12 +93,32 @@ define([],function(){
       //look at local storage and load, if viewmodel has save, save default to local storage, set also updates local storage
       var keys = Object.keys(_viewmodels),
           x = 0,
-          key = {};
+          key = {},
+          lStorage,
+          sStorage;
 
       for(x=0;x<keys.length;x++)
       {
         key = _viewmodels[keys[x]];
-        key._getData = KB_Model.deepCopy(key._tempData);
+        lStorage = _storage('local').getItem("KB_Model_"+keys[x]);
+        sStorage = _storage('session').getItem("KB_Model_"+keys[x]);
+
+        if(lStorage)
+        {
+          key._getData = JSON.parse(lStorage);
+        }
+        else if(sStorage)
+        {
+          key._getData = JSON.parse(sStorage);
+        }
+        else
+        {
+          key._getData = KB_Model.deepCopy(key._tempData);
+          if(key._save)
+          {
+            _storage(key._save).setItem("KB_Model_"+keys[x],JSON.stringify(key._getData));
+          }
+        }
 
         KB_Model.deepInject(key._getData,key._bindData,keys[x]);
         if(key._model)
@@ -110,7 +145,7 @@ define([],function(){
       {
         return _viewmodels[name]._bindData;
       }
-      _viewmodels[name] = {_tempData:data,_getData:{},_bindData:{},_save:!!(save === undefined ? false : save),_model:!!(model === undefined ? true : model)};
+      _viewmodels[name] = {_tempData:data,_getData:{},_bindData:{},_save:(save === undefined ? false : save),_model:!!(model === undefined ? true : model)};
       return KB_Model;
     }
 
@@ -151,38 +186,41 @@ define([],function(){
           key,
           x,
           obj2 = (obj2 === undefined ? {} : obj2),
-          _inject = function(key,value)
+          _inject = function(key,value,strl)
           {
-            if(str.lastIndexOf("[") === (str.length-1))
+            var isObject = (value.constructor.toString() === Object.toString()),
+                isArray = (value.constructor.toString() === Array.toString());
+            if(strl.length < 1 && value.constructor.toString() === Array.toString())
             {
-              str += key+"]";
+              strl += key+"[";
+            }
+            else if(strl.length < 1)
+            {
+              strl += key;
+            }
+            else if(strl.lastIndexOf("[") === (strl.length-1))
+            {
+              strl += key+"]"+(value.constructor.toString() === Array.toString() ? "[" : "");
             }
             else if(value.constructor.toString() === Array.toString())
             {
-              str += "."+key+"[";
+              strl += "."+key+"[";
             }
             else
             {
-              str += "."+key;
+              strl += "."+key;
             }
 
-            if(value.constructor.toString() === Object.toString() || value.constructor.toString() === Array.toString())
+            if(isObject || isArray)
             {
               //object.defineProp
               Object.defineProperty(obj2,key,{
-                get:function(){return obj[key];},
-                set:function(v){
-                  var oldValue = obj2[keys[x]];
-                  if(_onSet(name,obj2,v,oldValue,str,key))
-                  {
-                    obj[key] = v;
-                  }
-                  _onUpdate(name,obj2,v,oldValue,str,key);
-                },
+                value:(isObject ? {} : []),
+                writable:false,
                 enumerable:true,
                 configurable:true
               })
-              KB_Model.deepInject(key,obj2[keys[x]],str,name);
+              KB_Model.deepInject(obj[key],obj2[key],name,strl);
             }
             else
             {
@@ -190,12 +228,12 @@ define([],function(){
               Object.defineProperty(obj2,key,{
                 get:function(){return obj[key];},
                 set:function(v){
-                  var oldValue = obj2[keys[x]];
-                  if(_onSet(name,obj2,v,oldValue,str,key))
+                  var oldValue = obj[key];
+                  if(_onSet(name,obj2,v,oldValue,strl,key))
                   {
                     obj[key] = v;
                   }
-                  _onUpdate(name,obj2,v,oldValue,str,key);
+                  _onUpdate(name,obj2,v,oldValue,strl,key);
                 },
                 enumerable:true,
                 configurable:true
@@ -206,7 +244,7 @@ define([],function(){
       for(x=0;x<keys.length;x++)
       {
         key = obj[keys[x]];
-        _inject(keys[x],key);
+        _inject(keys[x],key,str);
       }
       return obj2;
     }

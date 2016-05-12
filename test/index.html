@@ -2,7 +2,7 @@
 <html>
   <head>
     <title>Testing</title>
-    <script type="text/javascript" src="../KB/Build/KB_Model.js"></script>
+    <script type="text/javascript" src="../KB_Model/Build/KB_Model.js"></script>
   </head>
   <body>
     <h1 id="testDiv">Test Title</h1>
@@ -13,6 +13,18 @@
     <div id="testDisplay"></div>
     <script type="text/javascript">
         var kbModel = CreateKB_Model();
+
+        var data = {t:{q:{f:5,w:'yay'}},s:[4244,244,214,[244,[4443,34343]]],d:'cool'};
+
+        kbModel.ViewModel('yay',data);
+        kbModel.ViewModel('yaySaved',data,'local');
+
+        kbModel.addDataListener('t.q.w',function(e){console.log(e);})
+        .addDataListener('d',function(e){console.log(e);})
+        .addDataListener('d',function(e){console.log(e);})
+
+        kbModel();
+
     </script>
   </body>
 </html>
