@@ -14,11 +14,12 @@ define([],function(){
             });
           }));
         },
-        _changeEvent = function(vm,obj,value,oldValue,scopeString,key,args,action)
+        _changeEvent = function(viewmodel,vm,obj,value,oldValue,scopeString,key,args,action)
         {
           this.stopPropagation = function(){this._stopPropogation = true;};
           this.preventDefault = function(){this._preventDefault = true;};
-          this.viewModel = vm;
+          this.viewModel = viewmodel;
+          this.viewModelKey = vm;
           this.scope = obj;
           this.value = value;
           this.oldValue = oldValue;
@@ -29,7 +30,7 @@ define([],function(){
         },
         _onSet = function(vm,obj,value,oldValue,scopeString,key)
         {
-              var e = new _changeEvent(vm,obj,value,oldValue,scopeString,key),
+              var e = new _changeEvent(_viewmodels[vm],vm,obj,value,oldValue,scopeString,key),
               x = 0,
               i = 0,
               strSplit = _splitScopeString(scopeString),
@@ -79,7 +80,7 @@ define([],function(){
         },
         _onUpdate = function(vm,obj,value,oldValue,scopeString,key,args,action)
         {
-              var e = new _changeEvent(vm,obj,value,oldValue,scopeString,key,args,action),
+              var e = new _changeEvent(_viewmodels[vm],vm,obj,value,oldValue,scopeString,key,args,action),
               x = 0,
               i = 0,
               strSplit = _splitScopeString(scopeString),
@@ -210,8 +211,8 @@ define([],function(){
     {
       var keys = Object.keys(obj),
           key = "",
-          x = 0,
-          obj2 = (obj2 === undefined ? {} : obj2);
+          x = 0;
+          obj2 = (obj2 === undefined ? (obj.constructor.toString() === Object.toString() ? {} : []) : obj2);
 
       for(x=0;x<keys.length;x++)
       {
@@ -238,6 +239,7 @@ define([],function(){
     {
       str = (str === undefined ? "" : str);
       name = (name === undefined ? "unknown" : name);
+      obj2 = (obj2 === undefined ? (obj.constructor.toString() === Object.toString() ? {} : []) : obj2);
 
       var keys = Object.keys(obj),
           key,
@@ -334,6 +336,11 @@ define([],function(){
       return KB_Model;
     }
 
+    KB_Model.getDataListeners = function()
+    {
+      return _dataListeners;
+    }
+
     KB_Model.addDataUpdateListener = function(attr,func) //name or tree.branch.prop[int] etc.
     {
       if(_dataUpdateListeners[attr] === undefined)
@@ -360,6 +367,11 @@ define([],function(){
         }
       }
       return KB_Model;
+    }
+
+    KB_Model.getDataUpdateListeners = function()
+    {
+      return _dataUpdateListeners;
     }
 
     return KB_Model;

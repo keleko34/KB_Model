@@ -86,6 +86,8 @@ This library allows for Creating ViewModels and listening for data changes in th
 
 - stopPropogration: (Function) stops all future added listeners from firing on this event
 - preventDefault: (Function) stops the attribute/property from changing *Pre Only*
+- viewModel: (Object|Array) the viewmodel that had the change happen
+- viewModelKey: (String) key of the viewmodel that had the change happen
 - value: (Any) The value that is trying to be set
 - oldValue (Any) The current value that is set prior to change
 - key (String) the key that changed
@@ -110,6 +112,24 @@ This library allows for Creating ViewModels and listening for data changes in th
  
  ViewModel (*String 'key', Object|Array data, EnumString['local','session'] storageType, Boolean inModel)<br />
  **Creates a ViewModel with the key passed, You can set storage type 'session' or 'local', default is no storage or Boolean false, inModel determines if the ViewModel is linked to a Model, default is true**
+ 
+ ViewModel (*String 'key'*)<br />
+ **returns the desired ViewModel data**
+ 
+ Model ()<br />
+ **returns the Model with all ViewModels**
+ 
+ deepCopy (*Object|Array item to copy, (optional) Object|Array item to copy to*)<br />
+ **deep copys an object or array and returns the copy, if second param is set then it copies to this and returns it**
+ 
+ deepInject (*Object|Array item to inject, (optional) Object|Array item to put the bindable properties in, (optional) String ViewModel, (optional) String scopeString*)<br />
+ **creates a bindable object|array from the passed object and returns it, if second object|array is passed this is used as the bindable object, the values are set and retrieved from the primary object passed**
+ 
+ getDataListeners ()<br />
+ **returns all pre set data listeners**
+ 
+ getDataUpdateListeners ()<br />
+ **returns all post set data listeners**
  
 #### Contributing
 
