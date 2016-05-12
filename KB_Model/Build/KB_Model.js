@@ -5,6 +5,15 @@ var CreateKB_Model = (function(){
         _viewmodels = {},
         _dataListeners = {},
         _dataUpdateListeners = {},
+        _splitScopeString = function(str)
+        {
+          return Array.prototype.concat.apply([],str.split(".").map(function(k,i){
+            return k.split("[")
+            .map(function(d,x){
+              return (d.indexOf("]") > -1 ? "["+d : d);
+            });
+          }));
+        },
         _changeEvent = function(vm,obj,value,oldValue,scopeString,key,args,action)
         {
           this.stopPropagation = function(){this._stopPropogation = true;};
@@ -20,8 +29,13 @@ var CreateKB_Model = (function(){
         },
         _onSet = function(vm,obj,value,oldValue,scopeString,key)
         {
-          var e = new _changeEvent(vm,obj,value,oldValue,scopeString,key),
-              x = 0;
+              var e = new _changeEvent(vm,obj,value,oldValue,scopeString,key),
+              x = 0,
+              i = 0,
+              strSplit = _splitScopeString(scopeString),
+              parentString = "";
+
+          /* global listeners */
           if(_dataListeners[key] !== undefined)
           {
             loop:for(x=0;x<_dataListeners[key].length;x++)
@@ -30,6 +44,25 @@ var CreateKB_Model = (function(){
               if(e._stopPropogation) break loop;
             }
           }
+
+          /* Parent Listeners */
+          if(!e._stopPropogation)
+          {
+            outerLoop:for(i=0;i<strSplit.length;i++)
+            {
+              parentString = strSplit.slice(0,(i+1)).join(".").replace(/(\.\[)/g,'[');
+              if(_dataListeners[parentString] !== undefined && !e._stopPropogation)
+              {
+                loop:for(x=0;x<_dataListeners[parentString].length;x++)
+                {
+                  _dataListeners[parentString][x].call({},e); //-- need to bind to parent object
+                  if(e._stopPropogation) break outerLoop;
+                }
+              }
+            }
+          }
+
+          /* local listeners */
           if(_dataListeners[scopeString] !== undefined && !e._stopPropogation)
           {
             loop:for(x=0;x<_dataListeners[scopeString].length;x++)
@@ -46,8 +79,13 @@ var CreateKB_Model = (function(){
         },
         _onUpdate = function(vm,obj,value,oldValue,scopeString,key,args,action)
         {
-          var e = new _changeEvent(vm,obj,value,oldValue,scopeString,key,args,action),
-              x = 0;
+              var e = new _changeEvent(vm,obj,value,oldValue,scopeString,key,args,action),
+              x = 0,
+              i = 0,
+              strSplit = _splitScopeString(scopeString),
+              parentString = "";
+
+          /* global listeners */
           if(_dataUpdateListeners[key] !== undefined)
           {
             loop:for(x=0;x<_dataUpdateListeners[key].length;x++)
@@ -56,6 +94,25 @@ var CreateKB_Model = (function(){
               if(e._stopPropogation) break loop;
             }
           }
+
+          /* Parent Listeners */
+          if(!e._stopPropogation)
+          {
+            outerLoop:for(i=0;i<strSplit.length;i++)
+            {
+              parentString = strSplit.slice(0,(i+1)).join(".").replace(/(\.\[)/g,'[');
+              if(_dataUpdateListeners[parentString] !== undefined && !e._stopPropogation)
+              {
+                loop:for(x=0;x<_dataUpdateListeners[parentString].length;x++)
+                {
+                  _dataUpdateListeners[parentString][x].call({},e); //-- need to bind to parent object
+                  if(e._stopPropogation) break outerLoop;
+                }
+              }
+            }
+          }
+
+          /* local listeners */
           if(_dataUpdateListeners[scopeString] !== undefined && !e._stopPropogation)
           {
             loop:for(x=0;x<_dataUpdateListeners[scopeString].length;x++)
