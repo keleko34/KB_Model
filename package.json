@@ -1,6 +1,6 @@
 {
   "name": "KB_Model",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "A Model and ViewModel Data binding library with Event Listeners, A module that can be used with KB or KB_Bind",
   "keywords": [
     "Model",
