@@ -62,6 +62,9 @@ This library allows for Creating ViewModels and listening for data changes in th
     /* Specific Array index Listener, will fire only on that specific Array index */
     kbModel.addDataListener('value3[3][0]',function(e){console.log(e);});
     
+    /* Listen to any changes, from anything */
+    kbModel.addDataListener('*',function(e){console.log(e);});
+    
     kbModel.call();
 
 

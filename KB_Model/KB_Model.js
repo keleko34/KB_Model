@@ -30,14 +30,25 @@ define([],function(){
         },
         _onSet = function(vm,obj,value,oldValue,scopeString,key)
         {
-              var e = new _changeEvent(_viewmodels[vm],vm,obj,value,oldValue,scopeString,key),
+          var e = new _changeEvent(_viewmodels[vm],vm,obj,value,oldValue,scopeString,key),
+              all = "*",
               x = 0,
               i = 0,
               strSplit = _splitScopeString(scopeString),
               parentString = "";
 
+          /* all listeners */
+          if(_dataListeners[all] !== undefined)
+          {
+            loop:for(x=0;x<_dataListeners[all].length;x++)
+            {
+              _dataListeners[all][x].call({},e); //-- need to bind to parent object
+              if(e._stopPropogation) break loop;
+            }
+          }
+
           /* global listeners */
-          if(_dataListeners[key] !== undefined)
+          if(_dataListeners[key] !== undefined && !e._stopPropogation)
           {
             loop:for(x=0;x<_dataListeners[key].length;x++)
             {
@@ -72,19 +83,28 @@ define([],function(){
               if(e._stopPropogation) break loop;
             }
           }
-          if(e._preventDefault)
-          {
-            return false;
-          }
+          if(e._preventDefault)  return false;
+
           return true;
         },
         _onUpdate = function(vm,obj,value,oldValue,scopeString,key,args,action)
         {
-              var e = new _changeEvent(_viewmodels[vm],vm,obj,value,oldValue,scopeString,key,args,action),
+          var e = new _changeEvent(_viewmodels[vm],vm,obj,value,oldValue,scopeString,key,args,action),
+              all = "*",
               x = 0,
               i = 0,
               strSplit = _splitScopeString(scopeString),
               parentString = "";
+
+          /* all listeners */
+          if(_dataUpdateListeners[all] !== undefined)
+          {
+            loop:for(x=0;x<_dataUpdateListeners[all].length;x++)
+            {
+              _dataUpdateListeners[all][x].call({},e); //-- need to bind to parent object
+              if(e._stopPropogation) break loop;
+            }
+          }
 
           /* global listeners */
           if(_dataUpdateListeners[key] !== undefined)
