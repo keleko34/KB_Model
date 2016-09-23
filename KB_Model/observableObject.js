@@ -1,12 +1,38 @@
 define([],function(){
     function CreateObservableObject(name,parent,scope)
     {
-        var _obj = {};
+        var _obj = {},
+            _actions = {
+                add:[],
+                set:[],
+                remove:[]
+            },
+            _onaction = function(arr,type,arguments)
+            {
+                var e = new eventObject(arr,arguments[0],type,arguments);
+
+                for(var x=0,_curr=_actions[type],len=_curr.length;x!==len;x++)
+                {
+                    _curr[x](e);
+                    if(e._stopPropogration) break;
+                }
+                return e._preventDefault;
+            }
 
         _obj.onadd = function(){};
         _obj.onremove = function(){};
 
-        _obj.onaction = function(){};
+        function eventObject(arr,key,action,args)
+        {
+            this.stopPropogation = function(){this._stopPropogration = true;}
+            this.local = arr;
+            this.key = key;
+            this.arguments = args;
+            this.type = action;
+            this.name = arr.__kbname;
+            this.root = arr.__kbref;
+            this.scope = arr.__kbscopeString;
+        }
 
         function add(key,value)
         {
@@ -20,7 +46,7 @@ define([],function(){
             {
                 this[key] = value;
             }
-            this.onaction(this,'add',arguments);
+            _onaction(this,'add',arguments);
             return this;
         }
 
@@ -33,6 +59,7 @@ define([],function(){
             else
             {
                 this[key] = value;
+                _onaction(this,'set',arguments);
             }
             return this;
         }
@@ -41,7 +68,8 @@ define([],function(){
         {
             if(this[key] === undefined)
             {
-                console.error('Your attempting to remove the key: ',key,' which does not exist on',this)
+                console.error('Your attempting to remove the key: ',key,' which does not exist on',this);
+                return this;
             }
             Object.defineProperty(this,key,{
                 value:undefined,
@@ -50,6 +78,7 @@ define([],function(){
                 configurable:true
             })
             delete this[key];
+            _onaction(this,'remove',arguments);
             return this;
         }
 
@@ -87,6 +116,39 @@ define([],function(){
             }
         }
 
+        function addActionListener(action,func)
+        {
+            if(Object.keys(_actions).indexOf(action) !== -1)
+            {
+                _actions[action].push(func);
+            }
+            else
+            {
+                console.error('There is no action listener by the name: ',action);
+            }
+            return this;
+        }
+
+        function removeActionListener(action,func)
+        {
+            if(Object.keys(_actions).indexOf(action) !== -1)
+            {
+                for(var x=0,_curr=_actions[action],len=_curr.length;x!==len;x++)
+                {
+                    if(_curr[x].toString() === func.toString())
+                    {
+                        _curr.splice(x,1);
+                        return this;
+                    }
+                }
+            }
+            else
+            {
+                console.error('There is no action listener by the name: ',action);
+            }
+            return this;
+        }
+
         function setDescriptor(value,writable)
         {
             return {
@@ -110,7 +172,9 @@ define([],function(){
             __kbparentlisteners:setDescriptor({}),
             __kbparentupdatelisteners:setDescriptor({}),
             __kbdatacreatelisteners:setDescriptor([]),
-            __kbdatadeletelisteners:setDescriptor([])
+            __kbdatadeletelisteners:setDescriptor([]),
+            addActionListener:setDescriptor(addActionListener),
+            removeActionListener:setDescriptor(removeActionListener)
         });
 
         Object.defineProperties(_arr,{

@@ -2,12 +2,48 @@ define([],function(){
 
     function CreateObservableArray(name,parent,scope)
     {
-        var _arr = [];
+        var _arr = [],
+        _actions = {
+                splice:[],
+                push:[],
+                pop:[],
+                shift:[],
+                unshift:[],
+                fill:[],
+                reverse:[],
+                sort:[],
+                add:[],
+                set:[],
+                remove:[]
+            },
+            _onaction = function(arr,type,arguments)
+            {
+                var e = new eventObject(arr,arguments[0],type,arguments);
+
+                for(var x=0,_curr=_actions[type],len=_curr.length;x!==len;x++)
+                {
+                    _curr[x](e);
+                    if(e._stopPropogration) break;
+                }
+                return e._preventDefault;
+            }
 
         _arr.onadd = function(){};
         _arr.onremove = function(){};
 
         _arr.onaction = function(){};
+
+        function eventObject(arr,key,action,args)
+        {
+            this.stopPropogation = function(){this._stopPropogration = true;}
+            this.local = arr;
+            this.key = key;
+            this.arguments = args;
+            this.type = action;
+            this.name = arr.__kbname;
+            this.root = arr.__kbref;
+            this.scope = arr.__kbscopeString;
+        }
 
         function isArray()
         {
@@ -277,6 +313,39 @@ define([],function(){
             }
         }
 
+        function addActionListener(action,func)
+        {
+            if(Object.keys(_actions).indexOf(action) !== -1)
+            {
+                _actions[action].push(func);
+            }
+            else
+            {
+                console.error('There is no action listener by the name: ',action);
+            }
+            return this;
+        }
+
+        function removeActionListener(action,func)
+        {
+            if(Object.keys(_actions).indexOf(action) !== -1)
+            {
+                for(var x=0,_curr=_actions[action],len=_curr.length;x!==len;x++)
+                {
+                    if(_curr[x].toString() === func.toString())
+                    {
+                        _curr.splice(x,1);
+                        return this;
+                    }
+                }
+            }
+            else
+            {
+                console.error('There is no action listener by the name: ',action);
+            }
+            return this;
+        }
+
         function setDescriptor(value,writable)
         {
             return {
@@ -308,7 +377,9 @@ define([],function(){
             __kbparentlisteners:setDescriptor({}),
             __kbparentupdatelisteners:setDescriptor({}),
             __kbdatacreatelisteners:setDescriptor([]),
-            __kbdatadeletelisteners:setDescriptor([])
+            __kbdatadeletelisteners:setDescriptor([]),
+            addActionListener:setDescriptor(addActionListener),
+            removeActionListener:setDescriptor(removeActionListener)
         });
 
         Object.defineProperties(_arr,{
