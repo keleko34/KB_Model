@@ -9,48 +9,83 @@ define([],function(){
 
         _arr.onaction = function(){};
 
+        function isArray()
+        {
+            return (typeof v === 'object' && !!v && v.constructor.toString() === Array.toString());
+        }
+
         function splice(index,remove,insert)
         {
             var _ret = [],
-                _insertLen = (insert !== undefined ? (isArray(insert) ? insert.length : 1) : 0);
+                _isInsertArray = isArray(insert),
+                _insertLen = (insert !== undefined ? (_isInsertArray ? insert.length : 1) : 0);
             
             /* removes necessary indexes and resets values to appropriate keys  */
-            if(remove !== 0)
+            if(remove !== 0 && this[(index+remove)] !== undefined)
             {
-                for(var x=index,len=(this.length-remove);x<len;x++)
+                for(var x=index,len=(index+remove);x<len;x++)
                 {
-                    if(x < (index+remove)) _ret.push(this[x]);
-                    
-                    this[x] = this[(x+remove)];
+                    if(this.onremove(this,(index+x),this[(index+x)]) === false)
+                    {
+                        remove -= 1;
+                    }
                 }
-                this.length = (this.length-remove);
+
+                if(remove !== 0)
+                {
+                    for(var x=index,len=(this.length-remove);x<len;x++)
+                    {
+                        if(x < (index+remove)) _ret.push(this[x]);
+                        
+                        this[x] = this[(x+remove)];
+                    }
+                    this.length = (this.length-remove);
+                }
             }
 
             if(_insertLen !== 0)
             {
-                for(var x=((this.length-1)+_insertLen),len=(index+_insertLen);x>len;x--)
+                if((this.length-1)+_insertLen > (index+_insertLen))
                 {
-                    this[x] = this[(x-_insertLen)];
-                }
-                for(var x=0,len=_insertLen;x<len;x++)
-                {
-                    this[(index+x)] = insert[x];
-                }
-            }
-
-            if(_ret.length !== 0)
-            {
-                for(var x=0,len=_ret.length;x<len;x++)
-                {
-                    if(this.onremove(this,(index+x),_ret[x]) === false)
+                    for(var x=((this.length-1)+_insertLen),len=(index+_insertLen);x>len;x--)
                     {
-                        this.slice(index,0,_ret[x]);
+                        this[x] = this[(x-_insertLen)];
                     }
                 }
+                if(_isInsertArray)
+                {
+                    for(var x=0,len=_insertLen;x<len;x++)
+                    {
+                        if(this[(index+x)] === undefined)
+                        {
+                            if(this.onadd(this,(index+x),insert[x]) !== false)
+                            {
+                                this[(index+x)] = insert[x];
+                            }
+                        }
+                        else
+                        {
+                            this[(index+x)] = insert[x];
+                        }
+                    }
+                }
+                else
+                {
+                    if(this[index] === undefined)
+                    {
+                        if(this.onadd(this,index,insert) !== false)
+                        {
+                            this[index] = insert;
+                        }
+                    }
+                    else
+                    {
+                        this[index] = insert;
+                    }
+                    this[index] = insert;
+                }
             }
-
             this.onaction(this,'splice',arguments);
-
             return _ret;
         }
 
@@ -157,20 +192,53 @@ define([],function(){
             return this;
         }
 
-        function add()
+        function add(value,index)
         {
-            var args = Array.prototype.slice.call(arguments);
-            for(var x=0,len=args.length;x<len;x++)
+            if(index === undefined)
             {
-                this.push(args[x]);
+                this.push(value);
+            }
+            else
+            {
+                if(this[index] === undefined)
+                {
+                    if(this.onadd(this,index,value) !== false)
+                    {
+                        this[index] = value;
+                    }
+                }
+                else
+                {
+                    console.error('Your attempting to add the index: ',index,' that already exists on',this,'try using set or direct set instead');
+                    return this;
+                }
             }
             this.onaction(this,'add',arguments);
             return this;
         }
 
+        function set(index,value)
+        {
+            if(this[index] === undefined)
+            {
+                this.add(value,index);
+            }
+            else
+            {
+                this[index] = value;
+            }
+            this.onaction(this,'set',arguments);
+            return this;
+        }
+
         function remove(index,remove)
         {
-            this.slice(index,remove);
+            if(this[index] === undefined)
+            {
+                console.error('Your attempting to remove the index: ',index,' that does not exist on ',this);
+                return this;
+            }
+            this.splice(index,remove);
             this.onaction(this,'remove',arguments);
             return this;
         }
@@ -180,25 +248,49 @@ define([],function(){
             return JSON.stringify(this);
         }
 
-        function toJSON(val)
+        function addListener(type)
         {
-            return this.slice();
+            var _listeners = this[type];
+            return function(prop,func)
+            {
+                _listeners[prop] = func;
+                return this;
+            }
         }
 
-        function setDescriptor(value)
+        function removeListener(type)
+        {
+            var _listeners = this[type];
+            return function(prop,func)
+            {
+                if(func !== undefined) _listeners = _listeners[prop];
+
+                for(var x=0,len=_listeners.length;x<len;x++)
+                {
+                    if(_listeners[x].toString() === func.toString())
+                    {
+                        _listeners.splice(x,1);
+                        return this;
+                    }
+                }
+                return this;
+            }
+        }
+
+        function setDescriptor(value,writable)
         {
             return {
                 value:value,
-                writable:false,
+                writable:!!writable,
                 enumerable:false,
                 configurable:false
             }
         }
 
         Object.defineProperties(_arr,{
-            __kbname:setDescriptor((name || "")),
-            __kbref:setDescriptor((parent || null)),
-            __kbscopeString:setDescriptor((scope || "")),
+            __kbname:setDescriptor((name || ""),true),
+            __kbref:setDescriptor((parent || null),true),
+            __kbscopeString:setDescriptor((scope || ""),true),
             splice:setDescriptor(splice),
             push:setDescriptor(push),
             pop:setDescriptor(pop),
@@ -208,15 +300,26 @@ define([],function(){
             reverse:setDescriptor(reverse),
             sort:setDescriptor(sort),
             add:setDescriptor(add),
+            set:setDescriptor(set),
             remove:setDescriptor(remove),
             stringify:setDescriptor(stringify),
-            toJSON:setDescriptor(toJSON),
             __kblisteners:setDescriptor({}),
             __kbupdatelisteners:setDescriptor({}),
             __kbparentlisteners:setDescriptor({}),
             __kbparentupdatelisteners:setDescriptor({}),
             __kbdatacreatelisteners:setDescriptor([]),
             __kbdatadeletelisteners:setDescriptor([])
+        });
+
+        Object.defineProperties(_arr,{
+            addDataListener:setDescriptor(addListener('__kblisteners')),
+            removeDataListener:setDescriptor(removeListener('__kblisteners')),
+            addDataUpdateListener:setDescriptor(addListener('__kbupdatelisteners')),
+            removeDataUpdateListener:setDescriptor(removeListener('__kbupdatelisteners')),
+            addDataCreateListener:setDescriptor(addListener('__kbdatacreatelisteners')),
+            removeDataCreateListener:setDescriptor(removeListener('__kbdatacreatelisteners')),
+            addDataRemoveListener:setDescriptor(addListener('__kbdatadeletelisteners')),
+            removeDataRemoveListener:setDescriptor(removeListener('__kbdatadeletelisteners'))
         });
 
         return _arr;
