@@ -68,10 +68,72 @@ define([],function(){
         return (Object.keys(desc).indexOf('value') === -1);
     }
 
+    /* this returns a new readable scope string based on the current property and new key */
     function getScopeString(str,prop)
     {
-        if()
+        var scope = ((typeof str === 'object') ? str.___kbscopeString : str);
+        return ((isArray(str) || !isNaN(parseInt(prop,10))) ? scope+"["+prop+"]" : (scope.length !== 0 ? scope+"."+ prop : prop));
     }
 
+    /* This returns an array of all propertys so it can be looped to fetch the proper property in the main object */
+    function splitScopeString(str)
+    {
+        return str.split(/[\[\]\.]/g).filter(function(v){
+            return (v.length !== 0);
+        });
+    }
 
+    /* This is the main getter setter method for all observables */
+    function setNormal(val,key,set,update)
+    {
+        var _val = val,
+            _key = key,
+            _set = set,
+            _update = update,
+            _oldValue;
+
+        return {
+            get:function(){return _val;},
+            set:function(v)
+            {
+                _oldValue = _val;
+                /* if we are attempting to set the value to the same that it already is don't allow set or update to run' */
+                if(JSON.stringify(_oldValue) === JSON.stringify(v))
+                {
+                    return;
+                }
+                if(_set(this,_key,v,_oldValue,this.__kbname,this.__kbref,getScopeString(this,_key)))
+                {
+                    _val = v;
+                    if(v !== undefined && typeof v === 'object' && v.__kbname === undefined)
+                    {
+                        _val = model.createObservable(this.__kbname,this,_key);
+                    }
+                }
+                _update(this,_key,v,_oldValue,this.__kbname,this.__kbref,getScopeString(this,_key));
+            },
+            enumerable:true,
+            configurable:true
+        }
+    }
+
+    function observableArray()
+    {
+        var _arr = [];
+    }
+
+    function observableObject()
+    {
+
+    }
+
+    function model()
+    {
+
+    }
+
+    model.isArray = isArray;
+
+
+    
 });

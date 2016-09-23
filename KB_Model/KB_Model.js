@@ -1,6 +1,7 @@
 define([],function(){
   function CreateKB_Model(){
 
+/* REGION private */
     var _model = {},
         _viewmodels = {},
         _dataListeners = {},
@@ -46,6 +47,7 @@ define([],function(){
               if(e._stopPropogation) break loop;
             }
           }
+          /* ENDREGION private */
 
           /* global listeners */
           if(_dataListeners[key] !== undefined && !e._stopPropogation)
