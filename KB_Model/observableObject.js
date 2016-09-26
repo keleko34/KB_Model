@@ -32,6 +32,13 @@ define([],function(){
             this.name = arr.__kbname;
             this.root = arr.__kbref;
             this.scope = arr.__kbscopeString;
+            this.parent = arr.___kbImmediateParent;
+        }
+
+        function isObservable(obj,prop)
+        {
+            var desc = Object.getOwnPropertyDescriptor(obj,prop);
+            return (Object.keys(desc).indexOf('value') === -1);
         }
 
         function add(key,value)
@@ -50,7 +57,24 @@ define([],function(){
             return this;
         }
 
-        function set(key,value)
+        function addPointer(objArr,prop)
+        {
+            if(this[key] !== undefined)
+            {
+                console.error('Your attempting to add the key: '+key+' that already exists on',this,' use .set() or direct set instead');
+                return this;
+            }
+
+            if(_obj.onadd(this,key,value) !== false)
+            {
+                var desc = Object.getOwnPropertyDescriptor(objArr,prop);
+                Object.defineProperty(this,prop,setPointer(objArr,prop,desc));
+            }
+
+            return this;
+        }
+
+        function set(key,value,stopChange)
         {
             if(this[key] === undefined)
             {
@@ -58,7 +82,14 @@ define([],function(){
             }
             else
             {
-                this[key] = value;
+                if(isObservable(this,key))
+                {
+                    Object.getOwnPropertyDescriptor(this,key).set(value,stopChange);
+                }
+                else
+                {
+                    this[key] = value;
+                }
                 _onaction(this,'set',arguments);
             }
             return this;
@@ -149,6 +180,21 @@ define([],function(){
             return this;
         }
 
+        function setPointer(obj,prop,desc)
+        {
+            
+            return {
+                get:function(){
+                    return obj[prop];
+                },
+                set:function(v){
+                    obj[prop] = v;
+                },
+                enumerable:desc.enumerable,
+                configurable:desc.configurable
+            }
+        }
+
         function setDescriptor(value,writable)
         {
             return {
@@ -163,7 +209,9 @@ define([],function(){
             __kbname:setDescriptor((name || ""),true),
             __kbref:setDescriptor((parent || null),true),
             __kbscopeString:setDescriptor((scope || ""),true),
+            __kbImmediateParent:setDescriptor((parent || null),true),
             add:setDescriptor(add),
+            addPointer:setDescriptor(addPointer),
             set:setDescriptor(set),
             remove:setDescriptor(remove),
             stringify:setDescriptor(stringify),

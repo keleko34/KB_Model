@@ -43,6 +43,7 @@ define([],function(){
             this.name = arr.__kbname;
             this.root = arr.__kbref;
             this.scope = arr.__kbscopeString;
+            this.parent = arr.___kbImmediateParent;
         }
 
         function isArray()
@@ -253,6 +254,23 @@ define([],function(){
             return this;
         }
 
+        function addPointer(objArr,prop)
+        {
+            if(this[key] !== undefined)
+            {
+                console.error('Your attempting to add the key: '+key+' that already exists on',this,' use .set() or direct set instead');
+                return this;
+            }
+
+            if(_obj.onadd(this,key,value) !== false)
+            {
+                var desc = Object.getOwnPropertyDescriptor(objArr,prop);
+                Object.defineProperty(this,prop,setPointer(objArr,prop,desc));
+            }
+
+            return this;
+        }
+
         function set(index,value)
         {
             if(this[index] === undefined)
@@ -346,6 +364,20 @@ define([],function(){
             return this;
         }
 
+        function setPointer(obj,prop,desc)
+        {
+            return {
+                get:function(){
+                    return obj[prop];
+                },
+                set:function(v){
+                    obj[prop] = v;
+                },
+                enumerable:desc.enumerable,
+                configurable:desc.configurable
+            }
+        }
+
         function setDescriptor(value,writable)
         {
             return {
@@ -360,6 +392,7 @@ define([],function(){
             __kbname:setDescriptor((name || ""),true),
             __kbref:setDescriptor((parent || null),true),
             __kbscopeString:setDescriptor((scope || ""),true),
+            __kbImmediateParent:setDescriptor((parent || null),true),
             splice:setDescriptor(splice),
             push:setDescriptor(push),
             pop:setDescriptor(pop),
@@ -369,6 +402,7 @@ define([],function(){
             reverse:setDescriptor(reverse),
             sort:setDescriptor(sort),
             add:setDescriptor(add),
+            addPointer:setDescriptor(addPointer),
             set:setDescriptor(set),
             remove:setDescriptor(remove),
             stringify:setDescriptor(stringify),
