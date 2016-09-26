@@ -49,11 +49,14 @@ define(['./observableArray','./observableObject'],function(CreateObservableArray
                 for(var x=0,len=exts.length;x<len;x++)
                 {
                     if(_viewmodel[exts[x]] !== undefined) _viewmodel.remove(exts[x]);
+                    
                     _viewmodel.add(exts[x],loopBind(pre[exts[x]]));
                 }
             }
 
             _viewmodel.apply(_viewmodel,params);
+
+
 
             return viewmodel;
         }
