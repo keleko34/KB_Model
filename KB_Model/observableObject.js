@@ -21,6 +21,8 @@ define([],function(){
 
         _obj.onadd = function(){};
         _obj.onremove = function(){};
+        _obj.onset = function(){};
+        _obj.onupdate = function(){};
 
         function eventObject(arr,key,action,args)
         {
@@ -51,7 +53,7 @@ define([],function(){
 
             if(_obj.onadd(this,key,value) !== false)
             {
-                this[key] = value;
+                Object.defineProperty(this,key,setBindDescriptor(value,key));
             }
             _onaction(this,'add',arguments);
             return this;
@@ -202,6 +204,30 @@ define([],function(){
                 writable:!!writable,
                 enumerable:false,
                 configurable:false
+            }
+        }
+
+        function setBindDescriptor(value,index)
+        {
+            var _value = value,
+                _prop = index,
+                _set = this.onset,
+                _update = this.onupdate;
+            return {
+                get:function(){
+                    return _value;
+                },
+                set:function(v,stopChange)
+                {
+                    if(_set(this,_prop,_value) !== false)
+                    {
+                        _value = v;
+                        _update(this,_prop,_value);
+                        if(!stopChange) this.callSubscribers(_prop);
+                    }
+                },
+                configurable:true,
+                enumerable:true
             }
         }
 

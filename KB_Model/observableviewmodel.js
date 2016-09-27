@@ -4,7 +4,11 @@ define(['./observableArray','./observableObject'],function(CreateObservableArray
     {
         var _name = name,
             _method = method,
-            _viewmodel = CreateObservableObject(name);
+            _viewmodel = CreateObservableObject(name),
+            _set = function(){},
+            _update = function(){},
+            _add = function(){},
+            _remove = function(){};
         
         function isArray(v)
         {
@@ -38,6 +42,11 @@ define(['./observableArray','./observableObject'],function(CreateObservableArray
             }
         }
 
+        function loopPointer(src,dest)
+        {
+
+        }
+
         function viewmodel(params,pre,post)
         {
             _viewmodel.__proto__ = _method.prototype;
@@ -49,8 +58,14 @@ define(['./observableArray','./observableObject'],function(CreateObservableArray
                 for(var x=0,len=exts.length;x<len;x++)
                 {
                     if(_viewmodel[exts[x]] !== undefined) _viewmodel.remove(exts[x]);
-                    
-                    _viewmodel.add(exts[x],loopBind(pre[exts[x]]));
+                    if(isObservable(pre,exts[x]))
+                    {
+
+                    }
+                    else
+                    {
+                        _viewmodel.add(exts[x],loopBind(pre[exts[x]]));
+                    }
                 }
             }
 

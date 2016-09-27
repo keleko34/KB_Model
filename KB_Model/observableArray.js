@@ -26,12 +26,13 @@ define([],function(){
                     if(e._stopPropogration) break;
                 }
                 return e._preventDefault;
-            }
+            },
+            _subscribers = {};
 
-        _arr.onadd = function(){};
+        _arr.add = function(){};
         _arr.onremove = function(){};
-
-        _arr.onaction = function(){};
+        _arr.onset = function(){};
+        _arr.onupdate = function(){};
 
         function eventObject(arr,key,action,args)
         {
@@ -97,7 +98,7 @@ define([],function(){
                         {
                             if(this.onadd(this,(index+x),insert[x]) !== false)
                             {
-                                this[(index+x)] = insert[x];
+                                Object.defineProperty(this,(index+x),setBindDescriptor(insert[x],(index+x)));
                             }
                         }
                         else
@@ -112,7 +113,7 @@ define([],function(){
                     {
                         if(this.onadd(this,index,insert) !== false)
                         {
-                            this[index] = insert;
+                            Object.defineProperty(this,index,setBindDescriptor(insert,index));
                         }
                     }
                     else
@@ -122,7 +123,7 @@ define([],function(){
                     this[index] = insert;
                 }
             }
-            this.onaction(this,'splice',arguments);
+            _onaction(this,'splice',arguments);
             return _ret;
         }
 
@@ -130,8 +131,8 @@ define([],function(){
         {
             if(this.onadd(this,(this.length),v) !== false)
             {
-                this[this.length] = v;
-                this.onaction(this,'push',arguments);
+                Object.defineProperty(this,this.length,setBindDescriptor(v,this.length));
+                _onaction(this,'push',arguments);
             }
             return this.length;
         }
@@ -142,7 +143,7 @@ define([],function(){
             if(this.onremove(this,(this.length-1),_ret) !== false)
             {
                 this.length = (this.length-1);
-                this.onaction(this,'pop',arguments);
+                _onaction(this,'pop',arguments);
                 return _ret;
             }
             return null;
@@ -159,7 +160,7 @@ define([],function(){
                 }
                 this.length = (this.length-1);
 
-                this.onaction(this,'shift',arguments);
+                _onaction(this,'shift',arguments);
                 return _ret;
             }
             return null;
@@ -185,24 +186,31 @@ define([],function(){
                     }
                     else
                     {
-                        this[x] = this[(x-args.length)];
+                        if(!isObservable(this,x))
+                        {
+                            Object.defineProperty(this,x,setBindDescriptor(this[(x-args.length)],x));
+                        }
+                        else
+                        {
+                            this[x] = this[(x-args.length)];
+                        }
                     }
                 }
             }
-            this.onaction(this,'unshift',arguments);
+            _onaction(this,'unshift',arguments);
             return this.length;
         }
 
         function fill(value,start,end)
         {
-            var _start = (start !== undefined ? start : 0),
-                _end = ((end !== undefined && end <= this.length) ? end : this.length);
+            var _start = (start !== undefined ? Math.max(0,start) : 0),
+                _end = ((end !== undefined && end <= this.length) ? Math.min(this.length,Math.max(0,end)) : this.length);
 
                 for(var x=_start;x<_end;x++)
                 {
                     this[x] = value;
                 }
-            this.onaction(this,'fill',arguments);
+            _onaction(this,'fill',arguments);
             return this;
         }
 
@@ -213,7 +221,7 @@ define([],function(){
             {
                 this[x] = _rev[x];
             }
-            this.onaction(this,'reverse',arguments);
+            _onaction(this,'reverse',arguments);
             return this;
         }
 
@@ -225,7 +233,7 @@ define([],function(){
             {
                 this[x] = _sort[x];
             }
-            this.onaction(this,'sort',arguments);
+            _onaction(this,'sort',arguments);
             return this;
         }
 
@@ -241,7 +249,7 @@ define([],function(){
                 {
                     if(this.onadd(this,index,value) !== false)
                     {
-                        this[index] = value;
+                        Object.defineProperty(this,index,setBindDescriptor(value,index));
                     }
                 }
                 else
@@ -250,7 +258,7 @@ define([],function(){
                     return this;
                 }
             }
-            this.onaction(this,'add',arguments);
+            _onaction(this,'add',arguments);
             return this;
         }
 
@@ -267,7 +275,7 @@ define([],function(){
                 var desc = Object.getOwnPropertyDescriptor(objArr,prop);
                 Object.defineProperty(this,prop,setPointer(objArr,prop,desc));
             }
-
+            _onaction(this,'add',arguments);
             return this;
         }
 
@@ -279,9 +287,16 @@ define([],function(){
             }
             else
             {
-                this[index] = value;
+                if(isObservable(this,index))
+                {
+                    Object.getOwnPropertyDescriptor(this,key).set(value,stopChange);
+                }
+                else
+                {
+                    Object.defineProperty(this,index,setBindDescriptor(value,index));
+                }
             }
-            this.onaction(this,'set',arguments);
+            _onaction(this,'set',arguments);
             return this;
         }
 
@@ -293,7 +308,7 @@ define([],function(){
                 return this;
             }
             this.splice(index,remove);
-            this.onaction(this,'remove',arguments);
+            _onaction(this,'remove',arguments);
             return this;
         }
 
@@ -388,6 +403,51 @@ define([],function(){
             }
         }
 
+        function setBindDescriptor(value,index)
+        {
+            var _value = value,
+                _prop = index,
+                _set = this.onset,
+                _update = this.onupdate;
+            return {
+                get:function(){
+                    return _value;
+                },
+                set:function(v,stopChange)
+                {
+                    if(_set(this,_prop,_value) !== false)
+                    {
+                        _value = v;
+                        _update(this,_prop,_value);
+                        if(!stopChange) this.callSubscribers(_prop);
+                    }
+                },
+                configurable:true,
+                enumerable:true
+            }
+        }
+
+        function subscribe(prop,func)
+        {
+            if(_subscribers[prop] === undefined) _subscribers[prop] = [];
+            _subscribers[prop].push(func);
+            return this;
+        }
+
+        function callSubscribers(prop)
+        {
+            if(_subscribers[prop] !== undefined)
+            {
+                var e = new eventObject(this,prop,'subscriber');
+                for(var x=0,len=_subscribers[prop].length;x<len;x++)
+                {
+                    _subscribers[prop][x](e);
+                    if(e._stopPropogration) break;
+                }
+            }
+            return this;
+        }
+
         Object.defineProperties(_arr,{
             __kbname:setDescriptor((name || ""),true),
             __kbref:setDescriptor((parent || null),true),
@@ -406,6 +466,8 @@ define([],function(){
             set:setDescriptor(set),
             remove:setDescriptor(remove),
             stringify:setDescriptor(stringify),
+            callSubscribers:setDescriptor(callSubscribers),
+            subscribe:setDescriptor(subscribe),
             __kblisteners:setDescriptor({}),
             __kbupdatelisteners:setDescriptor({}),
             __kbparentlisteners:setDescriptor({}),
