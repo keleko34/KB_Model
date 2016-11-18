@@ -44,12 +44,12 @@ define(['KObservableData'],function(KData){
 
         KB_Model.isRegistered = function(name)
         {
-
+            return (_viewmodels[name] !== undefined);
         }
 
         KB_Model.register = function(name,vm)
         {
-
+            _viewmodels[name] = vm;
         }
 
 
