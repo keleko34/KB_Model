@@ -44,15 +44,7 @@ define(['KObservableData'],function(KData){
                 {
                     if(!obsv.isObservable(obsv,keys[x]))
                     {
-                        if(obsv.isObject(obsv[keys[x]]) || obsv.isArray(obsv[keys[x]]))
-                        {
-                            obsv.set(keys[x],obsv[keys[x]])
-                            .parseData(obsv[keys[x]],obsv[keys[x]]);
-                        }
-                        else
-                        {
-                            obsv.set(keys[x],obsv[keys[x]]);
-                        }
+                        obsv.set(keys[x],obsv[keys[x]]);
                     }
                 }
 
@@ -67,15 +59,7 @@ define(['KObservableData'],function(KData){
                         }
                         else
                         {
-                            if(obsv.isObject(post[keys[x]]) || obsv.isArray(post[keys[x]]))
-                            {
-                                obsv.set(keys[x],post[keys[x]])
-                                .parseData(post[keys[x]],obsv[keys[x]]);
-                            }
-                            else
-                            {
-                                obsv.set(keys[x],post[keys[x]]);
-                            }
+                            obsv.set(keys[x],post[keys[x]]);
                         }
                     }
                 }
@@ -88,15 +72,7 @@ define(['KObservableData'],function(KData){
                         storage = JSON.parse(storage);
                         for(var x=0,keys=Object.keys(storage),len=keys.length;x<len;x++)
                         {
-                            if(obsv.isObject(storage[keys[x]]) || obsv.isArray(storage[keys[x]]))
-                            {
-                                obsv.set(keys[x],storage[keys[x]])
-                                .parseData(storage[keys[x]],obsv[keys[x]]);
-                            }
-                            else
-                            {
-                                obsv.set(keys[x],storage[keys[x]]);
-                            }
+                            obsv.set(keys[x],storage[keys[x]]);
                         }
                     }
                     else
@@ -116,15 +92,7 @@ define(['KObservableData'],function(KData){
                         storage = JSON.parse(storage);
                         for(var x=0,keys=Object.keys(storage),len=keys.length;x<len;x++)
                         {
-                            if(obsv.isObject(storage[keys[x]]) || obsv.isArray(storage[keys[x]]))
-                            {
-                                obsv.set(keys[x],storage[keys[x]])
-                                .parseData(storage[keys[x]],obsv[keys[x]]);
-                            }
-                            else
-                            {
-                                obsv.set(keys[x],storage[keys[x]]);
-                            }
+                            obsv.set(keys[x],storage[keys[x]]);
                         }
                     }
                     else
@@ -152,16 +120,9 @@ define(['KObservableData'],function(KData){
                         _submodel[(obsv.id || name)] = KData((obsv.id || name));
                         for(var x=0,keys=Object.keys(obsv).filter(function(i){return (_ignoreList.indexOf(i) === -1);}),len=keys.length;x<len;x++)
                         {
-                            if(obsv.isObject(obsv[keys[x]]) || obsv.isArray(obsv[keys[x]]))
-                            {
-                                obsv.set(keys[x],obsv[keys[x]])
-                                .parseData(obsv[keys[x]],obsv[keys[x]]);
-                            }
-                            else
-                            {
-                                obsv.set(keys[x],obsv[keys[x]]);
-                            }
-                            obsv.remove(keys[x]).addPointer(_submodel,keys[x]);
+                            obsv.set(keys[x],obsv[keys[x]])
+                            .remove(keys[x])
+                            .addPointer(_submodel,keys[x]);
                         }
                     }
                 }
