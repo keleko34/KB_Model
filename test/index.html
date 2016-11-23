@@ -57,8 +57,8 @@
           d3:kbModel.createViewModel('d3')
         };
 
-        viewmodels.d1.subscribe('t.q.f',function(val){
-          console.log('value: %o',val);
+        viewmodels.d1.subscribe('t.q.f',function(prop,val,oldVal){
+          console.log('prop: %o, value: %o, oldval: %o',prop,val,oldVal);
         });
         console.log(viewmodels.d1);
         console.log(viewmodels.d2);
