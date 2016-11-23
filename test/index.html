@@ -12,24 +12,59 @@
     <textarea id="testTextarea"></textarea>
     <div id="testDisplay"></div>
     <script type="text/javascript">
-        var kbModel = CreateKB_Model();
+        var kbModel = KB_Model();
 
-        var data = {t:{q:{f:5,w:'yay'}},s:[4244,244,214,[244,[4443,34343]]],d:'cool'};
+        var data = {
+          t:{q:{f:5,w:'yay'}},
+          s:[4244,244,214,[244,[4443,34343]]],
+          d:'cool'
+        };
 
-        kbModel.ViewModel('yay',data);
+        function data2(test)
+        {
+          this.info = test;
+          this.sessionStorage = true;
+          this.list = [
+            {name:'timmy',status:'sick'},
+            {name:'bob',status:'ontime'},
+            {name:'taco',status:'brilliant'}
+          ];
+          this.filters = {
+            toUpperCase:function(v){
+              return v.toString().toUpperCase();
+            }
+          };
+        }
 
-        kbModel.addDataListener('t.q.w',function(e){console.log(e);})
-        .addDataListener('d',function(e){console.log(e);})
-        .addDataListener('t.q',function(e){console.log(e);})
-        .addDataListener('s[3]',function(e){console.log(e);})
-        .addDataListener('*',function(e){console.log(e);});
+        function data3(test)
+        {
+          this.info = test;
+          this.store = true;
+          this.list = [
+            {id:'1',value:5600},
+            {id:'2',value:9200},
+            {id:'3',value:3500}
+          ];
+        }
 
-        kbModel();
+        kbModel.register('d1',data)
+        .register('d2',data2)
+        .register('d3',data3);
 
-        kbModel.ViewModel('yaySaved',data,'local');
+        var viewmodels = {
+          d1:kbModel.createViewModel('d1'),
+          d2:kbModel.createViewModel('d2'),
+          d3:kbModel.createViewModel('d3')
+        };
 
-        kbModel();
-
+        viewmodels.d1.subscribe('t.q.f',function(val){
+          console.log('value: %o',val);
+        });
+        console.log(viewmodels.d1);
+        console.log(viewmodels.d2);
+        console.log(viewmodels.d3);
+        viewmodels.d3.list[0].value = 1300;
+        console.log(kbModel.model());
     </script>
   </body>
 </html>

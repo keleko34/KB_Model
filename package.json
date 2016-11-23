@@ -30,7 +30,7 @@
     "url": "https://github.com/keleko34/KB_Model/issues"
   },
   "devDependencies": {
-    "K_Tasks": "^0.4.4"
+    "K_Tasks": "^0.4.7"
   },
   "scripts": {
     "build": "gulp build"
