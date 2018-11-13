@@ -7,6 +7,8 @@ More simple api interface,
 Automatic loading of script,
 Unit tests
 
+**NOTE this library will eventually be deleted
+
 # KB_Model
 Model and ViewModel Data Binding Event Based Library
 
